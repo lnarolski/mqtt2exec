@@ -1,5 +1,6 @@
 #pragma once
 
+#include "paho.mqtt.cpp/src/mqtt/async_client.h"
 #include <string>
 #include <map>
 
