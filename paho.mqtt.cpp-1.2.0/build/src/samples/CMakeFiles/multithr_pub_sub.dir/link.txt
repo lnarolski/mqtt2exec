@@ -1,1 +1,0 @@
-/usr/bin/c++     CMakeFiles/multithr_pub_sub.dir/multithr_pub_sub.cpp.o  -o multithr_pub_sub -Wl,-rpath,/mnt/h/mqtt2exec/paho.mqtt.cpp-1.2.0/build/src:/usr/local/lib: ../libpaho-mqttpp3.so.1.2.0 /usr/local/lib/libpaho-mqtt3a.so -pthread 

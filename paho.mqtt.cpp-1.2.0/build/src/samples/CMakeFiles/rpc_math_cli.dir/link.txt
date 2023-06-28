@@ -1,1 +1,0 @@
-/usr/bin/c++     CMakeFiles/rpc_math_cli.dir/rpc_math_cli.cpp.o  -o rpc_math_cli -Wl,-rpath,/mnt/h/mqtt2exec/paho.mqtt.cpp-1.2.0/build/src:/usr/local/lib: ../libpaho-mqttpp3.so.1.2.0 /usr/local/lib/libpaho-mqtt3a.so -pthread 

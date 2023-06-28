@@ -1,1 +1,0 @@
-/usr/bin/c++     CMakeFiles/topic_publish.dir/topic_publish.cpp.o  -o topic_publish -Wl,-rpath,/mnt/h/mqtt2exec/paho.mqtt.cpp-1.2.0/build/src:/usr/local/lib: ../libpaho-mqttpp3.so.1.2.0 /usr/local/lib/libpaho-mqtt3a.so -pthread 
