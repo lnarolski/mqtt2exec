@@ -1,12 +1,16 @@
 #include "mqtt2exec.h"
 
-mqtt2exec::mqtt2exec(std::string serverAddress, std::string clientId, std::string topic)
+mqtt2exec::mqtt2exec(std::string serverAddress, std::string clientId, std::string topic, int nRetryAttempts, int qos)
 {
         std::cout << "mqtt2exec::mqtt2exec(std::string serverAddress, std::string clientId, std::string topic)" << std::endl;
+
+	callbacksLocked = false;
 
 	SERVER_ADDR = serverAddress;
 	CLIENT_ID = clientId;
 	TOPIC = topic;
+	QOS = qos;
+	N_RETRY_ATTEMPTS = nRetryAttempts;
 
 	cli = std::make_unique<mqtt::async_client>(SERVER_ADDR, CLIENT_ID);
 	connOpts.set_clean_session(false);
@@ -17,8 +21,7 @@ mqtt2exec::mqtt2exec(std::string serverAddress, std::string clientId, std::strin
 	// When completed, the callback will subscribe to topic.
 	try {
 		std::cout << "Connecting to the MQTT server..." << std::endl << std::flush;
-		cli->connect(connOpts, nullptr, *cb);
-		while (!cli->is_connected());
+		cli->connect(connOpts, nullptr, *cb)->wait();
 	}
 	catch (const mqtt::exception& exc) {
 		std::cerr << "\nERROR: Unable to connect to MQTT server: '"
@@ -57,17 +60,36 @@ mqtt2exec::~mqtt2exec()
 bool mqtt2exec::AddCmdCallback(std::string receivedMsg, void(*callback)())
 {
 	std::cout << "mqtt2exec::AddCmdCallback(std::string receivedMsg, void(*callback)())" << std::endl;
-	if (callbacks.find(receivedMsg) == callbacks.end())
+
+	while(callbacksLocked);
+	callbacksLocked = true;
+
+	if (callbacks.find(receivedMsg) != callbacks.end())
 	{
+		callbacksLocked = false;
 		return false;
 	}
 	
 	callbacks[receivedMsg] = callback;
+	callbacksLocked = false;
 	return true;
 }
 
 bool mqtt2exec::RemoveCmdCallback(std::string receivedMsg)
 {
 	std::cout << "mqtt2exec::RemoveCmdCallback(std::string receivedMsg)" << std::endl;
+
+        while(callbacksLocked);
+        callbacksLocked = true;
+
+	if (callbacks.find(receivedMsg) == callbacks.end())
+        {
+                callbacksLocked = false;
+                return false;
+        }
+
+        callbacks.erase(receivedMsg);
+        callbacksLocked = false;
+
 	return true;
 }

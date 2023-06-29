@@ -4,18 +4,20 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <atomic>
 
 #include <iostream>
 
 class mqtt2exec
 {
-	const int QOS = 1;
-	const int N_RETRY_ATTEMPTS = 5;
+	int QOS = 1;
+	int N_RETRY_ATTEMPTS = 5;
 
 	std::string TOPIC = "";
 	std::string CLIENT_ID = "";
 	std::string SERVER_ADDR = "";
 
+	std::atomic<bool> callbacksLocked{};
 	std::map<std::string, void(*)()> callbacks{};
 
 	// Callbacks for the success or failures of requested actions.
@@ -123,6 +125,30 @@ class mqtt2exec
 			std::cout << "Message arrived" << std::endl;
 			std::cout << "\ttopic: '" << msg->get_topic() << "'" << std::endl;
 			std::cout << "\tpayload: '" << msg->to_string() << "'\n" << std::endl;
+
+std::cout << "Waiting for cb unlock" << std::endl;
+			while(parentObject.callbacksLocked);
+			parentObject.callbacksLocked = true;
+std::cout << "cb unlocked and locked again" << std::endl;
+			
+std::cout << "Num of cbs: " << parentObject.callbacks.size() << std::endl;
+
+			for (auto& callback : parentObject.callbacks)
+			{
+				std::cout << "Currently checked key: " << callback.first << std::endl;
+				if (msg->to_string() == callback.first)
+				{
+					std::cout << "Found key" << std::endl;
+
+					auto callbackPtr = callback.second;
+					parentObject.callbacksLocked = false;
+					callbackPtr();
+
+					return;
+				}
+			}
+
+			parentObject.callbacksLocked = false;
 		}
 
 		void delivery_complete(mqtt::delivery_token_ptr token) override {}
@@ -137,7 +163,7 @@ class mqtt2exec
         mqtt::connect_options connOpts{};
 
 	public:
-	mqtt2exec(std::string serverAddress, std::string clientId, std::string topic);
+	mqtt2exec(std::string serverAddress, std::string clientId, std::string topic, int nRetryAttempts = 5, int qos = 1);
 	~mqtt2exec();
 
 	bool AddCmdCallback(std::string receivedMsg, void(*callback)());
