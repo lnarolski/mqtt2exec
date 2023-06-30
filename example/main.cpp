@@ -17,7 +17,7 @@ void TurnOffSpacecraft()
 
 int main()
 {
-	mqtt2exec test("10.8.0.1:1883", "HubScreen", "zigbee2exec");
+	mqtt2exec test("10.8.0.1:1883", "HubScreen", "mqtt2exec");
 	test.AddCmdCallback("TurnOnSpacecraft", TurnOnSpacecraft);
 	test.AddCmdCallback("TurnOffSpacecraft", TurnOffSpacecraft);
 
