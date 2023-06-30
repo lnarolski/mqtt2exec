@@ -6,15 +6,13 @@
 void TurnOnSpacecraft()
 {
 	std::cout << "TurnOnSpacecraft()" << std::endl;
-	system("date > /mnt/h/mqtt2exec/test.tmp");
-	//	system("echo 1 > /sys/class/gpio/gpio20/value");
+	system("echo 1 > /sys/class/gpio/gpio20/value");
 }
 
 void TurnOffSpacecraft()
 {
 	std::cout << "TurnOffSpacecraft()" << std::endl;
-	system("date > /mnt/h/mqtt2exec/test2.tmp");
-    //system("echo 0 > /sys/class/gpio/gpio20/value");
+    system("echo 0 > /sys/class/gpio/gpio20/value");
 }
 
 int main()

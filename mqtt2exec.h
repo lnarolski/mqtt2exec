@@ -28,23 +28,8 @@ class mqtt2exec
 	{
 		std::string name_;
 
-		void on_failure(const mqtt::token& tok) override {
-			std::cout << name_ << " failure";
-			if (tok.get_message_id() != 0)
-				std::cout << " for token: [" << tok.get_message_id() << "]" << std::endl;
-			std::cout << std::endl;
-		}
-
-		void on_success(const mqtt::token& tok) override {
-			std::cout << name_ << " success";
-			if (tok.get_message_id() != 0)
-				std::cout << " for token: [" << tok.get_message_id() << "]" << std::endl;
-			auto top = tok.get_topics();
-			if (top && !top->empty())
-				std::cout << "\ttoken topic: '" << (*top)[0] << "', ..." << std::endl;
-			std::cout << std::endl;
-		}
-
+		void on_failure(const mqtt::token& tok) override;
+		void on_success(const mqtt::token& tok) override;
 	public:
 		action_listener(const std::string& name) : name_(name) {}
 	};
@@ -74,73 +59,26 @@ class mqtt2exec
 		// reconnect with different options.
 		// Another way this can be done manually, if using the same options, is
 		// to just call the async_client::reconnect() method.
-		void reconnect() {
-			std::this_thread::sleep_for(std::chrono::milliseconds(2500));
-			try {
-				cli_.connect(connOpts_, nullptr, *this);
-			}
-			catch (const mqtt::exception& exc) {
-				std::cerr << "Error: " << exc.what() << std::endl;
-				exit(1);
-			}
-		}
+		void reconnect();
 
 		// Re-connection failure
-		void on_failure(const mqtt::token& tok) override {
-			std::cout << "Connection attempt failed" << std::endl;
-			if (++nretry_ > parentObject.N_RETRY_ATTEMPTS)
-				exit(1);
-			reconnect();
-		}
+		void on_failure(const mqtt::token& tok) override;
 
 		// (Re)connection success
 		// Either this or connected() can be used for callbacks.
-		void on_success(const mqtt::token& tok) override {}
+		void on_success(const mqtt::token& tok) override;
 
 		// (Re)connection success
-		void connected(const std::string& cause) override {
-			std::cout << "\nConnection success" << std::endl;
-			std::cout << "\nSubscribing to topic '" << parentObject.TOPIC << "'\n"
-				<< "\tfor client " << parentObject.CLIENT_ID
-				<< " using QoS" << parentObject.QOS << "\n"
-				<< "\nPress Q<Enter> to quit\n" << std::endl;
-
-			cli_.subscribe(parentObject.TOPIC, parentObject.QOS, nullptr, subListener_);
-		}
+		void connected(const std::string& cause) override;
 
 		// Callback for when the connection is lost.
 		// This will initiate the attempt to manually reconnect.
-		void connection_lost(const std::string& cause) override {
-			std::cout << "\nConnection lost" << std::endl;
-			if (!cause.empty())
-				std::cout << "\tcause: " << cause << std::endl;
-
-			std::cout << "Reconnecting..." << std::endl;
-			nretry_ = 0;
-			reconnect();
-		}
+		void connection_lost(const std::string& cause) override;
 
 		// Callback for when a message arrives.
-		void message_arrived(mqtt::const_message_ptr msg) override {
-			while(parentObject.callbacksLocked);
-			parentObject.callbacksLocked = true;
+		void message_arrived(mqtt::const_message_ptr msg) override;
 
-			for (auto& callback : parentObject.callbacks)
-			{
-				if (msg->to_string() == callback.first)
-				{
-					auto callbackPtr = callback.second;
-					parentObject.callbacksLocked = false;
-					callbackPtr();
-
-					return;
-				}
-			}
-
-			parentObject.callbacksLocked = false;
-		}
-
-		void delivery_complete(mqtt::delivery_token_ptr token) override {}
+		void delivery_complete(mqtt::delivery_token_ptr token) override;
 
 	public:
 		callback(mqtt::async_client& cli, mqtt::connect_options& connOpts, mqtt2exec& parentObject)
