@@ -122,24 +122,13 @@ class mqtt2exec
 
 		// Callback for when a message arrives.
 		void message_arrived(mqtt::const_message_ptr msg) override {
-			std::cout << "Message arrived" << std::endl;
-			std::cout << "\ttopic: '" << msg->get_topic() << "'" << std::endl;
-			std::cout << "\tpayload: '" << msg->to_string() << "'\n" << std::endl;
-
-std::cout << "Waiting for cb unlock" << std::endl;
 			while(parentObject.callbacksLocked);
 			parentObject.callbacksLocked = true;
-std::cout << "cb unlocked and locked again" << std::endl;
-			
-std::cout << "Num of cbs: " << parentObject.callbacks.size() << std::endl;
 
 			for (auto& callback : parentObject.callbacks)
 			{
-				std::cout << "Currently checked key: " << callback.first << std::endl;
 				if (msg->to_string() == callback.first)
 				{
-					std::cout << "Found key" << std::endl;
-
 					auto callbackPtr = callback.second;
 					parentObject.callbacksLocked = false;
 					callbackPtr();

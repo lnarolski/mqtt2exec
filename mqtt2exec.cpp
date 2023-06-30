@@ -2,9 +2,7 @@
 
 mqtt2exec::mqtt2exec(std::string serverAddress, std::string clientId, std::string topic, int nRetryAttempts, int qos)
 {
-        std::cout << "mqtt2exec::mqtt2exec(std::string serverAddress, std::string clientId, std::string topic)" << std::endl;
-
-	callbacksLocked = false;
+    callbacksLocked = false;
 
 	SERVER_ADDR = serverAddress;
 	CLIENT_ID = clientId;
@@ -59,8 +57,6 @@ mqtt2exec::~mqtt2exec()
 
 bool mqtt2exec::AddCmdCallback(std::string receivedMsg, void(*callback)())
 {
-	std::cout << "mqtt2exec::AddCmdCallback(std::string receivedMsg, void(*callback)())" << std::endl;
-
 	while(callbacksLocked);
 	callbacksLocked = true;
 
@@ -77,8 +73,6 @@ bool mqtt2exec::AddCmdCallback(std::string receivedMsg, void(*callback)())
 
 bool mqtt2exec::RemoveCmdCallback(std::string receivedMsg)
 {
-	std::cout << "mqtt2exec::RemoveCmdCallback(std::string receivedMsg)" << std::endl;
-
         while(callbacksLocked);
         callbacksLocked = true;
 

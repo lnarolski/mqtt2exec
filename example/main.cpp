@@ -1,27 +1,29 @@
 #include "../mqtt2exec.h"
 
 #include <iostream>
+#include <future>
 
-void TurnOnLamp()
+void TurnOnSpacecraft()
 {
-	std::cout << "TurnOnMap()" << std::endl;
-	system("echo 123 > /mnt/h/mqtt2exec/test.txt");
+	std::cout << "TurnOnSpacecraft()" << std::endl;
+	system("date > /mnt/h/mqtt2exec/test.tmp");
 	//	system("echo 1 > /sys/class/gpio/gpio20/value");
 }
 
-void TurnOffLamp()
+void TurnOffSpacecraft()
 {
-        //system("echo 0 > /sys/class/gpio/gpio20/value");
+	std::cout << "TurnOffSpacecraft()" << std::endl;
+	system("date > /mnt/h/mqtt2exec/test2.tmp");
+    //system("echo 0 > /sys/class/gpio/gpio20/value");
 }
 
 int main()
 {
-	std::cout << "main()" << std::endl;
 	mqtt2exec test("10.8.0.1:1883", "HubScreen", "zigbee2exec");
-	test.AddCmdCallback("TurnOn", TurnOnLamp);
+	test.AddCmdCallback("TurnOnSpacecraft", TurnOnSpacecraft);
+	test.AddCmdCallback("TurnOffSpacecraft", TurnOffSpacecraft);
 
-	// Just block till user tells us to quit.
-	while (std::tolower(std::cin.get()) != 'q');
+	std::promise<void>().get_future().wait();
 
 	return 0;
 }
