@@ -12,7 +12,7 @@ void TurnOnSpacecraft()
 void TurnOffSpacecraft()
 {
 	std::cout << "TurnOffSpacecraft()" << std::endl;
-    system("echo 0 > /sys/class/gpio/gpio20/value");
+	system("echo 0 > /sys/class/gpio/gpio20/value");
 }
 
 int main()
