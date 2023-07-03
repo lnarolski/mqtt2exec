@@ -2,8 +2,6 @@
 
 mqtt2exec::mqtt2exec(std::string serverAddress, std::string clientId, std::string topic, int nRetryAttempts, int qos)
 {
-    callbacksLocked = false;
-
 	SERVER_ADDR = serverAddress;
 	CLIENT_ID = clientId;
 	TOPIC = topic;
@@ -14,32 +12,6 @@ mqtt2exec::mqtt2exec(std::string serverAddress, std::string clientId, std::strin
 	connOpts.set_clean_session(false);
 	cb = std::make_unique<callback>(*cli, connOpts, *this);
 	cli->set_callback(*cb);
-
-	// Start the connection.
-	// When completed, the callback will subscribe to topic.
-	try {
-		std::cout << "Connecting to the MQTT server..." << std::endl << std::flush;
-		cli->connect(connOpts, nullptr, *cb)->wait();
-	}
-	catch (const mqtt::exception& exc) {
-		std::cerr << "\nERROR: Unable to connect to MQTT server: '"
-			<< SERVER_ADDR << "'" << exc << std::endl;
-		return;
-	}
-
-	std::cout << "Connected to MQTT server" <<std::endl;
-
-	try
-	{
-		char toPublish[] = "hello from mqtt2exec";
-		cli->publish(TOPIC, toPublish, sizeof(toPublish));
-	}
-	catch (const mqtt::exception& exc)
-	{
-		std::cerr << "\nERROR: Unable to publish msg: '"
-                        << SERVER_ADDR << "'" << exc << std::endl;
-                return;
-	}
 }
 
 mqtt2exec::~mqtt2exec()
@@ -57,35 +29,72 @@ mqtt2exec::~mqtt2exec()
 
 bool mqtt2exec::AddCmdCallback(std::string receivedMsg, void(*callback)())
 {
-	while(callbacksLocked);
-	callbacksLocked = true;
+	callbacksMutex.lock();
 
 	if (callbacks.find(receivedMsg) != callbacks.end())
 	{
-		callbacksLocked = false;
+		callbacksMutex.unlock();
 		return false;
 	}
-	
 	callbacks[receivedMsg] = callback;
-	callbacksLocked = false;
+
+	callbacksMutex.unlock();
+
 	return true;
 }
 
 bool mqtt2exec::RemoveCmdCallback(std::string receivedMsg)
 {
-        while(callbacksLocked);
-        callbacksLocked = true;
+	callbacksMutex.lock();
 
 	if (callbacks.find(receivedMsg) == callbacks.end())
-        {
-                callbacksLocked = false;
-                return false;
-        }
-
-        callbacks.erase(receivedMsg);
-        callbacksLocked = false;
+	{
+		callbacksMutex.unlock();
+		return false;
+	}
+	callbacks.erase(receivedMsg);
+	
+	callbacksMutex.unlock();
 
 	return true;
+}
+
+bool mqtt2exec::Connect(bool publishTestMsg)
+{
+	// Start the connection.
+	// When completed, the callback will subscribe to topic.
+	try {
+		std::cout << "Connecting to the MQTT server..." << std::endl << std::flush;
+		cli->connect(connOpts, nullptr, *cb)->wait();
+	}
+	catch (const mqtt::exception& exc) {
+		std::cerr << "\nERROR: Unable to connect to MQTT server: '"
+			<< SERVER_ADDR << "'" << exc << std::endl;
+		return false;
+	}
+
+	std::cout << "Connected to MQTT server" <<std::endl;
+
+	if (publishTestMsg)
+	{
+		try
+		{
+			char toPublish[] = "hello from mqtt2exec";
+			cli->publish(TOPIC, toPublish, sizeof(toPublish));
+		}
+		catch (const mqtt::exception& exc)
+		{
+			std::cerr << "\nERROR: Unable to publish msg: '"
+							<< SERVER_ADDR << "'" << exc << std::endl;
+		}
+	}
+
+	return true;
+}
+
+bool mqtt2exec::IsConnected()
+{
+	return cli->is_connected();
 }
 
 void mqtt2exec::action_listener::on_failure(const mqtt::token& tok) {
@@ -145,22 +154,21 @@ void mqtt2exec::callback::connection_lost(const std::string& cause) {
 }
 
 void mqtt2exec::callback::message_arrived(mqtt::const_message_ptr msg) {
-	while(parentObject.callbacksLocked);
-	parentObject.callbacksLocked = true;
+	parentObject.callbacksMutex.lock();
 
 	for (auto& callback : parentObject.callbacks)
 	{
 		if (msg->to_string() == callback.first)
 		{
 			auto callbackPtr = callback.second;
-			parentObject.callbacksLocked = false;
+			parentObject.callbacksMutex.unlock();
 			callbackPtr();
 
 			return;
 		}
 	}
 
-	parentObject.callbacksLocked = false;
+	parentObject.callbacksMutex.unlock();
 }
 
 void mqtt2exec::callback::delivery_complete(mqtt::delivery_token_ptr token) {}

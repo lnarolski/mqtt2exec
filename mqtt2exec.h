@@ -4,7 +4,7 @@
 #include <string>
 #include <map>
 #include <memory>
-#include <atomic>
+#include <mutex>
 
 #include <iostream>
 
@@ -17,7 +17,7 @@ class mqtt2exec
 	std::string CLIENT_ID = "";
 	std::string SERVER_ADDR = "";
 
-	std::atomic<bool> callbacksLocked{};
+	std::mutex callbacksMutex{};
 	std::map<std::string, void(*)()> callbacks{};
 
 	// Callbacks for the success or failures of requested actions.
@@ -92,6 +92,9 @@ class mqtt2exec
 	public:
 	mqtt2exec(std::string serverAddress, std::string clientId, std::string topic, int nRetryAttempts = 5, int qos = 1);
 	~mqtt2exec();
+
+	bool Connect(bool publishTestMsg = true);
+	bool IsConnected();
 
 	bool AddCmdCallback(std::string receivedMsg, void(*callback)());
 	bool RemoveCmdCallback(std::string receivedMsg);

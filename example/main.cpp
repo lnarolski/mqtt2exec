@@ -17,9 +17,14 @@ void TurnOffSpacecraft()
 
 int main()
 {
-	mqtt2exec test("10.8.0.1:1883", "HubScreen", "mqtt2exec");
-	test.AddCmdCallback("TurnOnSpacecraft", TurnOnSpacecraft);
-	test.AddCmdCallback("TurnOffSpacecraft", TurnOffSpacecraft);
+	const std::string serverAddress = "10.8.0.1:1883";
+	const std::string clientId = "HubScreen";
+	const std::string topic = "mqtt2exec";
+
+	mqtt2exec connection(serverAddress, clientId, topic);
+	connection.AddCmdCallback("TurnOnSpacecraft", TurnOnSpacecraft);
+	connection.AddCmdCallback("TurnOffSpacecraft", TurnOffSpacecraft);
+	connection.Connect();
 
 	std::promise<void>().get_future().wait();
 
