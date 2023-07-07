@@ -11,3 +11,6 @@ Tested on PC with `Debian GNU/Linux 10 (buster)` and Raspberry Pi Zero 2 W with 
 5. To build example:
 	- Install g++ `sudo apt-get update; sudo apt-get install g++ -y`
 	- Use `g++ example/main.cpp mqtt2exec.cpp -o mqtt2exec.out -lpaho-mqttpp3 -lpaho-mqtt3as` command in repository directory to create `mqtt2exec.out` binary file
+
+# Context
+[narolski.eu](https://narolski.eu/2023/07/07/spacecraft/)
