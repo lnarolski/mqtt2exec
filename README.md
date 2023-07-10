@@ -3,6 +3,10 @@
 A library for executing commands (e.g. system commands) using the MQTT protocol. You can send command to MQTT topic and execute action on device connected to that MQTT broker.
 Tested on PC with `Debian GNU/Linux 10 (buster)` and Raspberry Pi Zero 2 W with `Raspbian GNU/Linux 11 (bullseye)`.
 
+# Example diagram
+
+![Example diagram](https://raw.githubusercontent.com/lnarolski/mqtt2exec/main/ExampleDiagram.png)
+
 # Build example
 1. Clone repository
 2. Run `git submodule update --init --recursive` command in repository directory
